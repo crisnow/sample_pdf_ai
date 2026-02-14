@@ -18,9 +18,14 @@ The project follows a modular structure with clear separation of responsibilitie
 project/
 │
 ├── main.py              # Application entry point
+
 ├── pdf_extractor.py     # Extracts text from PDF documents
+
 ├── ai_extractor.py      # Sends text to LLM and parses structured output
+
 ├── summary.py           # Generates operational 3-line summary
+
 ├── models.py            # Pydantic data models
+
 └── sample_data/
     └── invoice.pdf
