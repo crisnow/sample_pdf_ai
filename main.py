@@ -4,10 +4,11 @@ from summary import generate_summary
 
 
 def main():
-    pdf_path = "sample_data/invoice.pdf"
+    pdf_path = "sample_data/sample_invoice.pdf"
 
     print("Reading PDF...")
     pdf_text = extract_text_from_pdf(pdf_path)
+    print(pdf_text)
 
     if not pdf_text:
         print("No text extracted from PDF.")

@@ -1,0 +1,399 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Invoice AI Extractor</title>
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      body {
+        font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        min-height: 100vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 20px;
+      }
+
+      .container {
+        background: white;
+        border-radius: 15px;
+        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+        width: 100%;
+        max-width: 700px;
+        padding: 40px;
+      }
+
+      .header {
+        text-align: center;
+        margin-bottom: 40px;
+      }
+
+      .header h1 {
+        font-size: 32px;
+        color: #2d3748;
+        margin-bottom: 10px;
+      }
+
+      .header p {
+        color: #718096;
+        font-size: 16px;
+      }
+
+      .upload-section {
+        background: #f7fafc;
+        border: 2px dashed #cbd5e0;
+        border-radius: 10px;
+        padding: 30px;
+        text-align: center;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        margin-bottom: 20px;
+      }
+
+      .upload-section:hover {
+        border-color: #667eea;
+        background: #edf2f7;
+      }
+
+      .upload-section input[type="file"] {
+        display: none;
+      }
+
+      .upload-icon {
+        font-size: 48px;
+        margin-bottom: 10px;
+      }
+
+      .upload-text {
+        color: #4a5568;
+        font-size: 16px;
+        margin-bottom: 5px;
+      }
+
+      .upload-hint {
+        color: #a0aec0;
+        font-size: 14px;
+      }
+
+      .file-name {
+        color: #667eea;
+        font-weight: 600;
+        margin-top: 10px;
+        display: none;
+      }
+
+      .button-group {
+        display: flex;
+        gap: 10px;
+        margin-bottom: 30px;
+      }
+
+      button {
+        flex: 1;
+        padding: 12px 24px;
+        border: none;
+        border-radius: 8px;
+        font-size: 16px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s ease;
+      }
+
+      .btn-upload {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+      }
+
+      .btn-upload:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 10px 20px rgba(102, 126, 234, 0.3);
+      }
+
+      .btn-upload:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+        transform: none;
+      }
+
+      .btn-clear {
+        background: #e2e8f0;
+        color: #4a5568;
+      }
+
+      .btn-clear:hover {
+        background: #cbd5e0;
+      }
+
+      .output {
+        display: none;
+      }
+
+      .output.active {
+        display: block;
+      }
+
+      .summary-card {
+        background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+        border-radius: 12px;
+        padding: 25px;
+        margin-bottom: 20px;
+        border-left: 4px solid #667eea;
+      }
+
+      .summary-card h2 {
+        color: #2d3748;
+        font-size: 20px;
+        margin-bottom: 15px;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+      }
+
+      .summary-line {
+        background: white;
+        padding: 12px 15px;
+        margin-bottom: 10px;
+        border-radius: 6px;
+        color: #2d3748;
+        line-height: 1.6;
+        font-size: 15px;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+      }
+
+      .summary-line:last-child {
+        margin-bottom: 0;
+      }
+
+      .data-card {
+        background: #f7fafc;
+        border-radius: 12px;
+        padding: 20px;
+        margin-top: 20px;
+        border-top: 3px solid #e2e8f0;
+      }
+
+      .data-card h3 {
+        color: #2d3748;
+        font-size: 16px;
+        margin-bottom: 15px;
+      }
+
+      pre {
+        background: #2d3748;
+        color: #e2e8f0;
+        padding: 15px;
+        border-radius: 6px;
+        overflow-x: auto;
+        font-size: 13px;
+        line-height: 1.5;
+      }
+
+      .error {
+        background: #fed7d7;
+        color: #c53030;
+        padding: 15px;
+        border-radius: 8px;
+        border-left: 4px solid #c53030;
+        margin-bottom: 20px;
+      }
+
+      .loading {
+        text-align: center;
+        padding: 20px;
+        color: #667eea;
+      }
+
+      .spinner {
+        border: 3px solid #e2e8f0;
+        border-top: 3px solid #667eea;
+        border-radius: 50%;
+        width: 40px;
+        height: 40px;
+        animation: spin 0.8s linear infinite;
+        margin: 0 auto 15px;
+      }
+
+      @keyframes spin {
+        0% {
+          transform: rotate(0deg);
+        }
+        100% {
+          transform: rotate(360deg);
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <div class="header">
+        <h1>📄 Invoice AI Extractor</h1>
+        <p>Upload your invoice to get instant AI-powered summary</p>
+      </div>
+
+      <div
+        class="upload-section"
+        onclick="document.getElementById('fileInput').click()"
+      >
+        <div class="upload-icon">📤</div>
+        <div class="upload-text">Click to upload or drag and drop</div>
+        <div class="upload-hint">PDF files only (Max 10MB)</div>
+        <div class="file-name" id="fileName"></div>
+        <input type="file" id="fileInput" accept=".pdf" />
+      </div>
+
+      <div class="button-group">
+        <button
+          class="btn-upload"
+          id="uploadBtn"
+          onclick="uploadInvoice()"
+          disabled
+        >
+          Upload Invoice
+        </button>
+        <button class="btn-clear" onclick="clearForm()">Clear</button>
+      </div>
+
+      <div id="output" class="output"></div>
+    </div>
+
+    <script>
+      const fileInput = document.getElementById("fileInput");
+      const uploadBtn = document.getElementById("uploadBtn");
+      const fileName = document.getElementById("fileName");
+      const output = document.getElementById("output");
+
+      fileInput.addEventListener("change", function (e) {
+        const file = e.target.files[0];
+        if (file && file.type === "application/pdf") {
+          fileName.textContent = "✓ Selected: " + file.name;
+          fileName.style.display = "block";
+          uploadBtn.disabled = false;
+        } else {
+          alert("Please select a valid PDF file");
+          fileInput.value = "";
+          uploadBtn.disabled = true;
+        }
+      });
+
+      const uploadSection = document.querySelector(".upload-section");
+      uploadSection.addEventListener("dragover", function (e) {
+        e.preventDefault();
+        uploadSection.style.borderColor = "#667eea";
+        uploadSection.style.background = "#edf2f7";
+      });
+
+      uploadSection.addEventListener("dragleave", function () {
+        uploadSection.style.borderColor = "#cbd5e0";
+        uploadSection.style.background = "#f7fafc";
+      });
+
+      uploadSection.addEventListener("drop", function (e) {
+        e.preventDefault();
+        uploadSection.style.borderColor = "#cbd5e0";
+        uploadSection.style.background = "#f7fafc";
+
+        const files = e.dataTransfer.files;
+        if (files.length > 0) {
+          fileInput.files = files;
+          const event = new Event("change", { bubbles: true });
+          fileInput.dispatchEvent(event);
+        }
+      });
+
+      async function uploadInvoice() {
+        const file = fileInput.files[0];
+
+        if (!file) {
+          alert("Please select a file first");
+          return;
+        }
+
+        uploadBtn.disabled = true;
+        output.innerHTML =
+          '<div class="loading"><div class="spinner"></div><p>Processing your invoice...</p></div>';
+        output.classList.add("active");
+
+        const formData = new FormData();
+        formData.append("file", file);
+
+        try {
+          const response = await fetch("/upload-invoice", {
+            method: "POST",
+            body: formData,
+          });
+
+          if (!response.ok) {
+            throw new Error("HTTP error! status: " + response.status);
+          }
+
+          const data = await response.json();
+          console.log("API Response:", data);
+
+          displayResults(data);
+        } catch (error) {
+          console.error("Error:", error);
+          output.innerHTML =
+            '<div class="error"><strong>❌ Error:</strong> Unable to process invoice. Please check the server connection.</div>';
+        } finally {
+          uploadBtn.disabled = false;
+        }
+      }
+
+      function displayResults(data) {
+        let summaryHtml = "";
+
+        if (
+          Array.isArray(data.summary_lines) &&
+          data.summary_lines.length > 0
+        ) {
+          summaryHtml = data.summary_lines
+            .map(function (line) {
+              return '<div class="summary-line">' + escapeHtml(line) + "</div>";
+            })
+            .join("");
+        } else if (data.summary) {
+          summaryHtml =
+            '<div class="summary-line">' + escapeHtml(data.summary) + "</div>";
+        } else {
+          summaryHtml = '<div class="summary-line">No summary available</div>';
+        }
+
+        let dataDisplay = "";
+        if (data.structured_data) {
+          dataDisplay =
+            '<div class="data-card"><h3>📊 Structured Data</h3><pre>' +
+            escapeHtml(JSON.stringify(data.structured_data, null, 2)) +
+            "</pre></div>";
+        }
+
+        output.innerHTML =
+          '<div class="summary-card"><h2>📝 Invoice Summary</h2>' +
+          summaryHtml +
+          "</div>" +
+          dataDisplay;
+      }
+
+      function escapeHtml(text) {
+        const div = document.createElement("div");
+        div.textContent = text;
+        return div.innerHTML;
+      }
+
+      function clearForm() {
+        fileInput.value = "";
+        fileName.style.display = "none";
+        fileName.textContent = "";
+        uploadBtn.disabled = true;
+        output.innerHTML = "";
+        output.classList.remove("active");
+      }
+    </script>
+  </body>
+</html>

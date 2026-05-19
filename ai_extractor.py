@@ -1,48 +1,92 @@
+import os
 import json
-from openai import OpenAI
+import re
+from google import genai
 from models import InvoiceData
+from dotenv import load_dotenv
+
+load_dotenv()
 
 
-# Create client (make sure OPENAI_API_KEY is set in your environment)
-client = OpenAI()
+def clean_json(text: str) -> str:
+    """
+    Removes markdown fences and extra noise from LLM output.
+    """
+    text = text.strip()
+
+    # remove ```json or ``` wrappers
+    text = re.sub(r"^```json", "", text)
+    text = re.sub(r"^```", "", text)
+    text = re.sub(r"```$", "", text)
+
+    return text.strip()
 
 
 def extract_invoice_data(text: str) -> InvoiceData:
     """
-    Sends invoice text to the LLM and extracts structured data.
+    Sends invoice text to Gemini and extracts structured invoice data.
     """
+
+    api_key = os.getenv("GOOGLE_API_KEY")
+
+    if not api_key:
+        raise ValueError("GOOGLE_API_KEY is missing in environment variables")
+
+    client = genai.Client(api_key=api_key)
 
     prompt = f"""
-    Extract the following fields from this logistics invoice:
+You are a strict JSON extraction engine.
 
-    - invoice_number
-    - total_amount
-    - currency
-    - due_date
-    - shipper
-    - consignee
+Extract invoice data from the text below.
 
-    Return valid JSON only.
+Return ONLY valid JSON.
+No markdown.
+No explanations.
+No backticks.
 
-    Invoice Text:
-    {text}
-    """
+Schema:
+{{
+  "invoice_number": string or null,
+  "total_amount": number or null,
+  "currency": string or null,
+  "due_date": string or null,
+  "shipper": string or null,
+  "consignee": string or null
+}}
+
+TEXT:
+{text}
+"""
 
     try:
-        response = client.chat.completions.create(
-            model="gpt-4o-mini",
-            messages=[
-                {"role": "system", "content": "You extract structured data from logistics invoices."},
-                {"role": "user", "content": prompt},
-            ],
-            temperature=0,
+        response = client.models.generate_content(
+            model="gemini-flash-lite-latest",
+            contents=prompt
         )
 
-        content = response.choices[0].message.content
+        raw = response.text or ""
 
-        data = json.loads(content)
+        print("\nRAW RESPONSE:")
+        print(raw)
 
-        return InvoiceData(**data)
+        cleaned = clean_json(raw)
+
+        if not cleaned:
+            raise ValueError("Empty response from Gemini")
+
+        data = json.loads(cleaned)
+
+        # Map safely into Pydantic model
+        invoice = InvoiceData(
+            invoice_number=data.get("invoice_number"),
+            total_amount=data.get("total_amount"),
+            currency=data.get("currency"),
+            due_date=data.get("due_date"),
+            shipper=data.get("shipper"),
+            consignee=data.get("consignee"),
+        )
+
+        return invoice
 
     except Exception as e:
         print(f"AI extraction error: {e}")
