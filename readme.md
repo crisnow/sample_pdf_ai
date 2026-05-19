@@ -1,7 +1,7 @@
 📦 Smart Logistics Email Summarizer (Prototype)
 🚀 Overview
 
-This project is a prototype of an AI-powered email automation tool for the logistics industry.
+This project is an AI-powered email automation tool for the logistics industry.
 
 The system:
 Reads a logistics invoice (PDF)
