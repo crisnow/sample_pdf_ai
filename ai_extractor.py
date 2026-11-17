@@ -32,8 +32,10 @@ def extract_invoice_data(text: str) -> InvoiceData:
     if not api_key:
         raise ValueError("GOOGLE_API_KEY is missing in environment variables")
 
-    genai.configure(api_key=api_key)
-    model = genai.GenerativeModel("gemini-flash-lite-latest")
+    # genai.configure(api_key=api_key)
+    client = genai.Client(api_key=api_key)
+    # model = genai.GenerativeModel("gemini-flash-lite-latest")
+    
 
     prompt = f"""
 You are a strict JSON extraction engine.
@@ -60,7 +62,11 @@ TEXT:
 """
 
     try:
-        response = model.generate_content(prompt)
+        # response = model.generate_content(prompt)
+        response = client.models.generate_content(
+            model="gemini-flash-lite-latest",
+            contents=prompt
+        )
 
         raw = response.text or ""
 
