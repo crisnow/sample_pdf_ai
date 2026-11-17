@@ -4,6 +4,10 @@ An AI-assisted prototype that converts logistics invoices in PDF format into cle
 
 Built with FastAPI, `pdfplumber`, Pydantic, and Google Gemini.
 
+## Preview
+
+![Invoice AI Extractor upload screen](docs/invoice-ai-extractor.png)
+
 ## What it does
 
 1. Accepts a text-based invoice PDF through a simple browser interface or the command line.
